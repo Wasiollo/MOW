@@ -58,7 +58,7 @@ constructiveInduction = function(data) {
   
   for(i in 1:ncol(data)) {
     for(n in uniqueNukleons) {
-      newFeaturesSpliceD = cbind(newFeatures, data[, i] == n)
+      newFeatures = cbind(newFeatures, data[, i] == n)
     }
     
     diResponse = matrix(FALSE, ncol = nrow(diNuks), nrow = nrow(data))
@@ -66,7 +66,7 @@ constructiveInduction = function(data) {
       for (j in 1:nrow(diNuks)) {
         for(k in 1:nrow(data)) {
           if (data[k, i - 1]  == diNuks[j,1] && data[k, i]  == diNuks[j,2]) {
-            diResponse[k, i] = TRUE
+            diResponse[k, j] = TRUE
           }
         }
       }
@@ -79,7 +79,7 @@ constructiveInduction = function(data) {
       for (j in 1:nrow(diNuks)) {
         for(k in 1:nrow(data)) {
           if ((data[k, i - 2]  == triNuks[j,1] && data[k, i - 1]  == triNuks[j,2]) &&  data[k, i] == triNuks[j,3]) {
-            triResponse[k, i] = TRUE
+            triResponse[k, j] = TRUE
           }
         }
       }
@@ -92,17 +92,33 @@ constructiveInduction = function(data) {
   return(newFeatures)
 }
 
+reduceSet = function(reducedSize, splitData) {
+  rSetCount = nrow(splitData$data)
+  
+  tinyData = splitData$data[1:reducedSize, ]
+  tinyData = rbind(tinyData, splitData$data[(rSetCount - reducedSize) : rSetCount ,])
+  
+  tinyLabels = splitData$labels[1:reducedSize]
+  tinyLabels = c(tinyLabels, splitData$labels[(rSetCount - reducedSize) :  rSetCount])
+  
+  res = list("splitIndex" = splitData$splitIndex, "data" = tinyData, "labels" = tinyLabels)
+  
+}
+
 
 dataSpliceD = readDTrain('data/spliceDTrainKIS.dat')
 dataSpliceA = readDTrain('data/spliceATrainKIS.dat')
 
 
+# Reduce set for testing
+
+reducedD = reduceSet(25, dataSpliceD) 
+
+
 # Constructive induction
 
-
-
-newFeaturesSpliceD = constructiveInduction(dataSpliceD$data)
-newFeaturesSpliceA = constructiveInduction(dataSpliceA$data)
+# newFeaturesSpliceD = constructiveInduction(dataSpliceD$data)
+# newFeaturesSpliceA = constructiveInduction(dataSpliceA$data)
 
 
 
