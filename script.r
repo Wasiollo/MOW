@@ -200,7 +200,7 @@ test.rfe.treebag = function(testName, data, labels, cvNumber=10, sizes=c(1:10,se
 
 test.gafs.rf = function(testName, data, labels, cvNumber=10, iterations=200) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = rfGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
+  ctrl = gafsControl(functions = rfGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE, allowParallel = TRUE, genParallel = TRUE)
   
   profileRes = gafs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
@@ -216,7 +216,7 @@ test.gafs.rf = function(testName, data, labels, cvNumber=10, iterations=200) {
 
 test.gafs.treebag = function(testName, data, labels, cvNumber=10, iterations=200) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = treebagGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+  ctrl = gafsControl(functions = treebagGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE, allowParallel = TRUE, genParallel = TRUE)
   
   profileRes = gafs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
@@ -246,7 +246,7 @@ test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
 
 test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
   data = as.data.frame(data) 
-  ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE)
+  ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE, allowParallel = TRUE)
   
   profileRes = safs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
@@ -262,7 +262,7 @@ test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, imp
 
 test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
+  ctrl = gafsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE, allowParallel = TRUE)
   
   profileRes = safs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
