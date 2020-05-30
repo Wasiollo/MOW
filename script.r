@@ -67,9 +67,6 @@ constructiveInduction = function(data) {
   newFeatures = NULL
   
   for(i in 1:ncol(data)) {
-    if (i == 13) {
-      b = 'A'
-    }
 
     for(n in uniqueNukleons) {
       newFeatures = cbind(newFeatures, data[, i] == n)
@@ -127,74 +124,75 @@ reduceSet = function(reducedSize, splitData) {
   
 }
 
+write.plot.png = function(filename, plotSource) {
+  png(filename)
+  trellis.par.set(caretTheme())
+  print(plot(plotSource,  type = c("g", "o")))
+  dev.off()
+} 
 
-test.rfe.lm = function(testName, data, labels, cvNumber=10) {
+
+test.rfe.lm = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
   data = as.data.frame(data)
-  ctrl = rfeControl(functions = lmFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+  ctrl = rfeControl(functions = lmFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
   
-  profileRes = rfe(x = data, y = labels, rfeControl = ctrl)
+  profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
   outputText = profileRes
   
-  sink(paste(testName, "_rfe_lm_cv_", cvNumber,"_output.txt"))
+  sink(paste(testName, "_rfe_lm_cv_", cvNumber,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste(testName, "_rfe_lm_cv_", cvNumber,"_plot.png"))
-  plot(profileRes)
-  dev.off()
+  write.plot.png(paste(testName, "_rfe_lm_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
 }
 
-test.rfe.rf = function(testName, data, labels, cvNumber=10) {
+test.rfe.rf = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
   data = as.data.frame(data)
-  ctrl = rfeControl(functions = rfFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+  ctrl = rfeControl(functions = rfFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
   
-  profileRes = rfe(x = data, y = labels, rfeControl = ctrl)
+  profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
   outputText = profileRes
   
-  sink(paste(testName, "_rfe_rf_cv_", cvNumber,"_output.txt"))
+  sink(paste(testName, "_rfe_rf_cv_", cvNumber,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste(testName, "_rfe_rf_cv_", cvNumber,"_plot.png"))
-  plot(profileRes)
-  dev.off()
+  write.plot.png(paste(testName, "_rfe_rf_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
 }
 
-test.rfe.nb = function(testName, data, labels, cvNumber=10) {
+test.rfe.nb = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
   data = as.data.frame(data)
-  ctrl = rfeControl(functions = nbFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+  labels = as.factor(labels)
   
-  profileRes = rfe(x = data, y = labels, rfeControl = ctrl)
+  ctrl = rfeControl(functions = nbFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
+  
+  profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
   outputText = profileRes
   
-  sink(paste(testName, "_rfe_nb_cv_", cvNumber,"_output.txt"))
+  sink(paste(testName, "_rfe_nb_cv_", cvNumber,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste(testName, "_rfe_nb_cv_", cvNumber,"_plot.png"))
-  plot(profileRes)
-  dev.off()
+  write.plot.png(paste(testName, "_rfe_nb_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
   
 }
 
-test.rfe.treebag = function(testName, data, labels, cvNumber=10) {
-  data = as.data.frame(data)
-  ctrl = rfeControl(functions = treebagFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+test.rfe.treebag = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
+  #data = as.data.frame(data)
+  ctrl = rfeControl(functions = treebagFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
   
-  profileRes = rfe(x = data, y = labels, rfeControl = ctrl)
+  profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
   outputText = profileRes
   
-  sink(paste(testName, "_rfe_treebag_cv_", cvNumber,"_output.txt"))
+  sink(paste(testName, "_rfe_treebag_cv_", cvNumber,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste(testName, "_rfe_treebag_cv_", cvNumber,"_plot.png"))
-  plot(profileRes)
-  dev.off()
+  write.plot.png(paste(testName, "_rfe_treebag_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
   
 }
 
@@ -202,20 +200,18 @@ test.rfe.treebag = function(testName, data, labels, cvNumber=10) {
 
 test.gafs.rf = function(testName, data, labels, cvNumber=10, iterations=200) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = rfGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+  ctrl = gafsControl(functions = rfGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
   
   profileRes = gafs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
   outputText = profileRes
   
-  sink(paste(testName, "_ga_tf_cv_", cvNumber,"_iters_", iterations,"_output.txt"))
+  sink(paste(testName, "_ga_tf_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste(testName, "_ga_tf_cv_", cvNumber,"_iters_", iterations,"_plot.png"))
-  plot(profileRes)
-  dev.off()
-  
+  write.plot.png(paste(testName, "_ga_tf_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
+
 }
 
 test.gafs.treebag = function(testName, data, labels, cvNumber=10, iterations=200) {
@@ -226,17 +222,17 @@ test.gafs.treebag = function(testName, data, labels, cvNumber=10, iterations=200
   
   outputText = profileRes
   
-  sink(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_output.txt"))
+  sink(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste("_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_plot.png"))
-  plot(profileRes)
-  dev.off()
+  write.plot.png(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
   
 }
 
 test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200) {
+  labels = as.factor(labels)
+  
  # TODO 
   return(NULL)
 }
@@ -250,41 +246,39 @@ test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
 
 test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
   data = as.data.frame(data) 
-  ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = TRUE)
+  ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE)
   
   profileRes = safs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
   outputText = profileRes
   
-  sink(paste(testName, "_sa_tf_cv_", cvNumber,"_impr_", improve,"_iters_", iterations,"_output.txt"))
+  sink(paste(testName, "_sa_tf_cv_", cvNumber,"_impr_", improve,"_iters_", iterations,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste(testName, "_sa_tf_cv_", cvNumber,"_impr_", improve,"_iters_", iterations,"_plot.png"))
-  plot(profileRes)
-  dev.off()
+  write.plot.png(paste(testName, "_sa_tf_cv_", cvNumber,"_impr_", improve,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
   
 }
 
 test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = treebagGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+  ctrl = gafsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
   
   profileRes = safs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
   outputText = profileRes
   
-  sink(paste(testName, "_sa_treebag_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_output.txt"))
+  sink(paste(testName, "_sa_treebag_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  png(filename=paste(testName, "_sa_treebag_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_plot.png"))
-  plot(profileRes)
-  dev.off()
+  write.plot.png(paste(testName, "_sa_treebag_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_plot.png", sep = ""), profileRes)
   
 }
 
 test.safs.nb = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
+  labels = as.factor(labels)
+  
   # TODO 
   return(NULL)
 }
@@ -296,7 +290,7 @@ test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, imp
 
 # Running tests
 
-runTestsSplice = function(name, data, labels, cvNumers=c(5,7,10), itersVec=c(100, 200), imprVec=c(25, 50)) {
+runTestsSplice = function(name, data, labels, cvNumers=c(5,10), itersVec=c(25, 50), imprVec=c(10, 25)) {
   
   # rfe tests
   
@@ -307,7 +301,7 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5,7,10), itersVec=c(100
     
     test.rfe.rf(testName = name, data = data, labels = labels, cvNumber = cvn)
     
-    test.rfe.treebag(testName = name, data = data, labels = labels, cvNumber = cvn)
+    #test.rfe.treebag(testName = name, data = data, labels = labels, cvNumber = cvn)
   }
   
   # gafs
@@ -321,7 +315,7 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5,7,10), itersVec=c(100
       
       test.gafs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
-      test.gafs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
+      #test.gafs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
     }
   }
   
@@ -338,7 +332,7 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5,7,10), itersVec=c(100
         
         test.safs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
-        test.safs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+        #test.safs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
       }
     }
@@ -354,26 +348,31 @@ dataSpliceA = readDTrain('data/spliceATrainKIS.dat')
 
 # Constructive induction
 
-#newFeaturesSpliceD = constructiveInduction(dataSpliceD$data)
-#newFeaturesSpliceA = constructiveInduction(dataSpliceA$data)
+newFeaturesSpliceD = constructiveInduction(dataSpliceD$data)
+newFeaturesSpliceA = constructiveInduction(dataSpliceA$data)
 
 # Run tests
 
-#runTestsSplice(name = "spliceD_results", data = newFeaturesSpliceD, labels = dataSpliceD$labels)
+runTestsSplice(name = "spliceD_results", data = newFeaturesSpliceD, labels = dataSpliceD$labels)
 
-#runTestsSplice(name = "spliceA_results", data = newFeaturesSpliceA, labels = dataSpliceA$labels)
+runTestsSplice(name = "spliceA_results", data = newFeaturesSpliceA, labels = dataSpliceA$labels)
 
 
 # Reduce set for testing
 
-reducedD = reduceSet(5, dataSpliceD) 
-extRedD = constructiveInduction(reducedD$data)
+#reducedD = reduceSet(25, dataSpliceD) 
+#extRedD = constructiveInduction(reducedD$data)
 
-extRedD = extRedD[,1:10]
+#reducedD$labels = as.factor(reducedD$labels)
 
-runTestsSplice(name = "test_tests_results", data = extRedD, labels = reducedD$labels)
+#extRedD = extRedD[,1:10]
+#extLabels = reducedD$labels
+
+#runTestsSplice(name = "test_tests_results1", data = extRedD, labels = extLabels)
 
 
 
 
+#test.rfe.treebag("maunal", extRedD, extLabels)
 
+#test.gafs.treebag("maunal", extRedD, extLabels)
