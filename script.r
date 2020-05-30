@@ -1,8 +1,5 @@
 # install.packages('caret')
 
-#install.packages('mlbench')
-#install.packages('Hmisc')
-#install.packages('randomForest')
 library("caret")
 
 rm(list=ls())
@@ -181,7 +178,8 @@ test.rfe.nb = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10,
 }
 
 test.rfe.treebag = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
-  #data = as.data.frame(data)
+  data = as.data.frame(data)
+  data = as.factor(data)
   ctrl = rfeControl(functions = treebagFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
   
   profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
@@ -232,14 +230,35 @@ test.gafs.treebag = function(testName, data, labels, cvNumber=10, iterations=200
 
 test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200) {
   labels = as.factor(labels)
+  data = as.data.frame(data)
   
- # TODO 
-  return(NULL)
+  nb_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber)
+  
+  profileRes = gafs(x =  extRedD, y = extLabels, iters = iterations, gafsControl = nb_ga_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  
+  outputText = profileRes
+  
+  sink(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  print(outputText)
+  sink()
+  
+  write.plot.png(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
 test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
-  # TODO 
-  return(NULL)
+  data = as.data.frame(data)
+  
+  lm_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber)
+  
+  profileRes = gafs(x =  extRedD, y = extLabels, iters = iterations, gafsControl = lm_ga_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  
+  outputText = profileRes
+  
+  sink(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  print(outputText)
+  sink()
+  
+  write.plot.png(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
 #   SAFS
@@ -262,7 +281,7 @@ test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, imp
 
 test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE, allowParallel = TRUE)
+  ctrl = safsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE, allowParallel = TRUE)
   
   profileRes = safs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
@@ -278,14 +297,23 @@ test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200
 
 test.safs.nb = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
   labels = as.factor(labels)
+  data = as.data.frame(data)
   
-  # TODO 
-  return(NULL)
+  nb_sa_ctrl = safsControl(functions = caretGA, method = "cv", number = cvNumber, improve = improve)
+  
+  profileRes = safs(x = data, y = labels, iters = iterations, gafsControl = nb_sa_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  
+  outputText = profileRes
 }
 
 test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
-  # TODO 
-  return(NULL)
+  data = as.data.frame(data)
+  
+  lm_sa_ctrl = safsControl(functions = caretGA, method = "cv", number = cvNumber, improve = improve)
+  
+  profileRes = safs(x =  data, y = labels, iters = iterations, gafsControl = lm_sa_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  
+  outputText = profileRes
 }
 
 # Running tests
@@ -370,9 +398,3 @@ runTestsSplice(name = "spliceA_results", data = newFeaturesSpliceA, labels = dat
 
 #runTestsSplice(name = "test_tests_results1", data = extRedD, labels = extLabels)
 
-
-
-
-#test.rfe.treebag("maunal", extRedD, extLabels)
-
-#test.gafs.treebag("maunal", extRedD, extLabels)
