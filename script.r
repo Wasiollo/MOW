@@ -1,5 +1,10 @@
 # install.packages('caret')
 
+# install.packages('e1071')
+
+# install.packages('klaR')
+
+
 library("caret")
 
 rm(list=ls())
@@ -247,6 +252,7 @@ test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200) {
 
 test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
   data = as.data.frame(data)
+  labels = as.numeric(labels)
   
   lm_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber)
   
@@ -314,6 +320,7 @@ test.safs.nb = function(testName, data, labels, cvNumber=10, iterations=200, imp
 
 test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
   data = data.frame(data)
+  labels = as.numeric(labels)
   
   lm_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = 5, number = cvNumber, improve = improve)
   
@@ -408,8 +415,8 @@ runTestsSplice(name = "spliceA_results", data = newFeaturesSpliceA, labels = dat
 
 # Reduce set for testing
 
-reducedD = reduceSet(25, dataSpliceD) 
-extRedD = constructiveInduction(reducedD$data)
+#reducedD = reduceSet(25, dataSpliceD) 
+#extRedD = constructiveInduction(reducedD$data)
 
 #reducedD$labels = as.factor(reducedD$labels)
 
