@@ -234,7 +234,7 @@ test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200) {
   
   nb_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber)
   
-  profileRes = gafs(x =  extRedD, y = extLabels, iters = iterations, gafsControl = nb_ga_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  profileRes = gafs(x =  data, y = labels, iters = iterations, gafsControl = nb_ga_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
   outputText = profileRes
   
@@ -250,7 +250,7 @@ test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
   
   lm_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber)
   
-  profileRes = gafs(x =  extRedD, y = extLabels, iters = iterations, gafsControl = lm_ga_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  profileRes = gafs(x =  data, y = labels, iters = iterations, gafsControl = lm_ga_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
   outputText = profileRes
   
@@ -318,16 +318,16 @@ test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, imp
 
 # Running tests
 
-runTestsSplice = function(name, data, labels, cvNumers=c(5,10), itersVec=c(25, 50), imprVec=c(10, 25)) {
+runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50), imprVec=c(10, 25)) {
   
   # rfe tests
   
   for(cvn in cvNumers) {
-    test.rfe.lm(testName = name, data = data, labels = labels, cvNumber = cvn)
+    #test.rfe.lm(testName = name, data = data, labels = labels, cvNumber = cvn)
     
-    test.rfe.nb(testName = name, data = data, labels = labels, cvNumber = cvn)
+    #test.rfe.nb(testName = name, data = data, labels = labels, cvNumber = cvn)
     
-    test.rfe.rf(testName = name, data = data, labels = labels, cvNumber = cvn)
+    #test.rfe.rf(testName = name, data = data, labels = labels, cvNumber = cvn)
     
     #test.rfe.treebag(testName = name, data = data, labels = labels, cvNumber = cvn)
   }
@@ -339,9 +339,9 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5,10), itersVec=c(25, 5
     for(itr in itersVec) {
       test.gafs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
-      test.gafs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
+     # test.gafs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
-      test.gafs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
+      #test.gafs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
       #test.gafs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
     }
@@ -356,9 +356,9 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5,10), itersVec=c(25, 5
       for(impr in imprVec) {
         test.safs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
-        test.safs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+       # test.safs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
-        test.safs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+        # test.safs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
         #test.safs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
