@@ -238,11 +238,11 @@ test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200) {
   
   outputText = profileRes
   
-  sink(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  sink(paste(testName, "_ga_nb_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  write.plot.png(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
+  write.plot.png(paste(testName, "_ga_nb_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
 test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
@@ -254,11 +254,11 @@ test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
   
   outputText = profileRes
   
-  sink(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  sink(paste(testName, "_ga_lm_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
   print(outputText)
   sink()
   
-  write.plot.png(paste(testName, "_ga_treebag_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
+  write.plot.png(paste(testName, "_ga_lm_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
 #   SAFS
@@ -267,7 +267,7 @@ test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, imp
   data = as.data.frame(data) 
   ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE, allowParallel = TRUE)
   
-  profileRes = safs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
+  profileRes = safs(x = data, y = labels, safsControl = ctrl, iters = iterations )
   
   outputText = profileRes
   
@@ -283,7 +283,7 @@ test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200
   data = as.data.frame(data)
   ctrl = safsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE, allowParallel = TRUE)
   
-  profileRes = safs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
+  profileRes = safs(x = data, y = labels, safsControl = ctrl, iters = iterations )
   
   outputText = profileRes
   
@@ -299,26 +299,38 @@ test.safs.nb = function(testName, data, labels, cvNumber=10, iterations=200, imp
   labels = as.factor(labels)
   data = as.data.frame(data)
   
-  nb_sa_ctrl = safsControl(functions = caretGA, method = "cv", number = cvNumber, improve = improve)
+  nb_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = 5, number = cvNumber, improve = improve)
   
-  profileRes = safs(x = data, y = labels, iters = iterations, gafsControl = nb_sa_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  profileRes = safs(x = data, y = labels, iters = iterations, safsControl = nb_sa_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
   outputText = profileRes
+  
+  sink(paste(testName, "_sa_nb_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  print(outputText)
+  sink()
+  
+  write.plot.png(paste(testName, "_sa_nb_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
 test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
-  data = as.data.frame(data)
+  data = data.frame(data)
   
-  lm_sa_ctrl = safsControl(functions = caretGA, method = "cv", number = cvNumber, improve = improve)
+  lm_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = 5, number = cvNumber, improve = improve)
   
-  profileRes = safs(x =  data, y = labels, iters = iterations, gafsControl = lm_sa_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  profileRes = safs(x =  data, y = labels, iters = iterations, safsControl = lm_sa_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
   outputText = profileRes
+  
+  sink(paste(testName, "_sa_lm_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  print(outputText)
+  sink()
+  
+  write.plot.png(paste(testName, "_sa_lm_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
 # Running tests
 
-runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50), imprVec=c(10, 25)) {
+runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50, 100, 150), imprVec=c(10, 25, 50)) {
   
   # rfe tests
   
@@ -337,9 +349,9 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50),
   for(cvn in cvNumers) {
     
     for(itr in itersVec) {
-      test.gafs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
+      #test.gafs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
-     # test.gafs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
+      #test.gafs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
       #test.gafs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
@@ -354,11 +366,11 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50),
     for(itr in itersVec) {
       
       for(impr in imprVec) {
-        test.safs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+        #test.safs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
-       # test.safs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+        test.safs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
-        # test.safs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+        test.safs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
         #test.safs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
@@ -369,27 +381,35 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50),
 }
 
 
-#Load test data
+#Load test data D
 
 dataSpliceD = readDTrain('data/spliceDTrainKIS.dat')
-dataSpliceA = readDTrain('data/spliceATrainKIS.dat')
 
-# Constructive induction
+# Constructive induction D
 
 newFeaturesSpliceD = constructiveInduction(dataSpliceD$data)
-newFeaturesSpliceA = constructiveInduction(dataSpliceA$data)
 
-# Run tests
+# Run tests D
 
 runTestsSplice(name = "spliceD_results", data = newFeaturesSpliceD, labels = dataSpliceD$labels)
+
+#Load test data D
+
+dataSpliceA = readDTrain('data/spliceATrainKIS.dat')
+
+# Constructive induction D
+
+newFeaturesSpliceA = constructiveInduction(dataSpliceA$data)
+
+# Run tests D
 
 runTestsSplice(name = "spliceA_results", data = newFeaturesSpliceA, labels = dataSpliceA$labels)
 
 
 # Reduce set for testing
 
-#reducedD = reduceSet(25, dataSpliceD) 
-#extRedD = constructiveInduction(reducedD$data)
+reducedD = reduceSet(25, dataSpliceD) 
+extRedD = constructiveInduction(reducedD$data)
 
 #reducedD$labels = as.factor(reducedD$labels)
 
