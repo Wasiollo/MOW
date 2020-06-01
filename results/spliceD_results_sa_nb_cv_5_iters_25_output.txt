@@ -1,0 +1,30 @@
+
+Simulated Annealing Feature Selection
+
+5256 samples
+2325 predictors
+2 classes: '0', '1' 
+
+Maximum search iterations: 25 
+Restart after 10 iterations without improvement (1.8 restarts on average)
+
+Internal performance values: Accuracy, Kappa
+Subset selection driven to maximize internal Accuracy 
+
+External performance values: Accuracy, Kappa
+Best iteration chose by maximizing external Accuracy 
+External resampling method: Cross-Validated (5 fold) 
+
+During resampling:
+  * the top 5 selected variables (out of a possible 2325):
+    AC3 (80%), ACC12 (80%), AG15 (80%), ANG8 (80%), ATG6 (80%)
+  * on average, 473 variables were selected (min = 466, max = 486)
+
+In the final search using the entire training set:
+   * 466 features selected at iteration 1 including:
+     A1, G1, N1, GC1, NC1 ... 
+   * external performance at this iteration is
+
+   Accuracy       Kappa 
+     0.7877      0.0000 
+
