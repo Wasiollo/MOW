@@ -57,7 +57,7 @@ readDTrain = function(filepath) {
   return (data)
 }
 
-constructiveInduction = function(data) {
+constructiveInduction = function(data, triExpand=TRUE) {
   uniqueNukleons = unique(c(data))
   
   diNuks = expand.grid(uniqueNukleons, uniqueNukleons)
@@ -89,20 +89,21 @@ constructiveInduction = function(data) {
     }
     
     newFeatures = cbind(newFeatures, diResponse)
-    
-    triResponse = matrix(FALSE, ncol = nrow(triNuks), nrow = nrow(data))
-    colnames(triResponse) = paste(triNuksColNames, i, sep = "")
-    if(i >= 3)  {
-      for (j in 1:nrow(diNuks)) {
-        for(k in 1:nrow(data)) {
-          if ((data[k, i - 2]  == triNuks[j,1] && data[k, i - 1]  == triNuks[j,2]) &&  data[k, i] == triNuks[j,3]) {
-            triResponse[k, j] = TRUE
+    if(triExpand) {
+      triResponse = matrix(FALSE, ncol = nrow(triNuks), nrow = nrow(data))
+      colnames(triResponse) = paste(triNuksColNames, i, sep = "")
+      if(i >= 3)  {
+        for (j in 1:nrow(diNuks)) {
+          for(k in 1:nrow(data)) {
+            if ((data[k, i - 2]  == triNuks[j,1] && data[k, i - 1]  == triNuks[j,2]) &&  data[k, i] == triNuks[j,3]) {
+              triResponse[k, j] = TRUE
+            }
           }
         }
       }
+      
+      newFeatures = cbind(newFeatures, triResponse)
     }
-    
-    newFeatures = cbind(newFeatures, triResponse)
     
   }
   
@@ -373,7 +374,7 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50, 
     for(itr in itersVec) {
       
       for(impr in imprVec) {
-        #test.safs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+        test.safs.lm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
         test.safs.nb(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
@@ -406,7 +407,7 @@ dataSpliceA = readDTrain('data/spliceATrainKIS.dat')
 
 # Constructive induction D
 
-newFeaturesSpliceA = constructiveInduction(dataSpliceA$data)
+newFeaturesSpliceA = constructiveInduction(dataSpliceA$data, FALSE)
 
 # Run tests D
 
