@@ -4,6 +4,8 @@
 
 # install.packages('klaR')
 # install.packages('randomForest')
+# install.packages('kernlab')
+
 
 library("caret")
 
@@ -57,7 +59,7 @@ readDTrain = function(filepath) {
   return (data)
 }
 
-constructiveInduction = function(data, triExpand=TRUE) {
+constructiveInduction = function(data, diExpand=TRUE, triExpand=TRUE) {
   uniqueNukleons = unique(c(data))
   
   diNuks = expand.grid(uniqueNukleons, uniqueNukleons)
@@ -76,19 +78,22 @@ constructiveInduction = function(data, triExpand=TRUE) {
 
     }
     
-    diResponse = matrix(FALSE, ncol = nrow(diNuks), nrow = nrow(data))
-    colnames(diResponse) = paste(diNuksColNames, i, sep = "")
-    if(i >= 2)  {
-      for (j in 1:nrow(diNuks)) {
-        for(k in 1:nrow(data)) {
-          if (data[k, i - 1]  == diNuks[j,1] && data[k, i]  == diNuks[j,2]) {
-            diResponse[k, j] = TRUE
+    if(diExpand) {
+      diResponse = matrix(FALSE, ncol = nrow(diNuks), nrow = nrow(data))
+      colnames(diResponse) = paste(diNuksColNames, i, sep = "")
+      if(i >= 2)  {
+        for (j in 1:nrow(diNuks)) {
+          for(k in 1:nrow(data)) {
+            if (data[k, i - 1]  == diNuks[j,1] && data[k, i]  == diNuks[j,2]) {
+              diResponse[k, j] = TRUE
+            }
           }
         }
       }
+      
+      newFeatures = cbind(newFeatures, diResponse)
     }
     
-    newFeatures = cbind(newFeatures, diResponse)
     if(triExpand) {
       triResponse = matrix(FALSE, ncol = nrow(triNuks), nrow = nrow(data))
       colnames(triResponse) = paste(triNuksColNames, i, sep = "")
@@ -135,9 +140,9 @@ write.plot.png = function(filename, plotSource) {
 } 
 
 
-test.rfe.lm = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
+test.rfe.lm = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250)), r = 1) {
   data = as.data.frame(data)
-  ctrl = rfeControl(functions = lmFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
+  ctrl = rfeControl(functions = lmFuncs, method = "repeatedcv", number = cvNumber, repeats = r, verbose = TRUE)
   
   profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
@@ -150,9 +155,9 @@ test.rfe.lm = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10,
   write.plot.png(paste(testName, "_rfe_lm_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
 }
 
-test.rfe.rf = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
+test.rfe.rf = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250)), r = 1) {
   data = as.data.frame(data)
-  ctrl = rfeControl(functions = rfFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
+  ctrl = rfeControl(functions = rfFuncs, method = "repeatedcv", number = cvNumber, repeats = r, verbose = TRUE)
   
   profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
@@ -165,11 +170,11 @@ test.rfe.rf = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10,
   write.plot.png(paste(testName, "_rfe_rf_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
 }
 
-test.rfe.nb = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
+test.rfe.nb = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250)), r = 1) {
   data = as.data.frame(data)
   labels = as.factor(labels)
   
-  ctrl = rfeControl(functions = nbFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
+  ctrl = rfeControl(functions = nbFuncs, method = "repeatedcv", number = cvNumber, repeats = r, verbose = TRUE)
   
   profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
@@ -183,10 +188,10 @@ test.rfe.nb = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10,
   
 }
 
-test.rfe.treebag = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
+test.rfe.treebag = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250)), r = 1) {
   data = as.data.frame(data)
   data = as.factor(data)
-  ctrl = rfeControl(functions = treebagFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
+  ctrl = rfeControl(functions = treebagFuncs, method = "repeatedcv", number = cvNumber, repeats = r, verbose = TRUE)
   
   profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
   
@@ -200,11 +205,29 @@ test.rfe.treebag = function(testName, data, labels, cvNumber=10, sizes=c(1:10,se
   
 }
 
+test.rfe.svm = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250)), r = 1) {
+  data = as.data.frame(data)
+
+    ctrl = rfeControl(functions = caretFuncs, method = "repeatedcv", number = cvNumber, repeats = r, verbose = TRUE)
+  
+  profileRes = rfe(x = data, y = labels, rfeControl = ctrl, method="svmLinear", sizes = sizes)
+  
+  outputText = profileRes
+  
+  sink(paste(testName, "_rfe_svm_cv_", cvNumber,"_output.txt", sep = ""))
+  print(outputText)
+  sink()
+  
+  write.plot.png(paste(testName, "_rfe_svm_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
+  
+
+}
+
 #   GAFS
 
-test.gafs.rf = function(testName, data, labels, cvNumber=10, iterations=200) {
+test.gafs.rf = function(testName, data, labels, cvNumber=10, iterations=200, r = 1) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = rfGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE, allowParallel = TRUE, genParallel = TRUE)
+  ctrl = gafsControl(functions = rfGA, method = "repeatedcv", number = cvNumber, repeats = r, verbose = TRUE, allowParallel = TRUE, genParallel = TRUE)
   
   profileRes = gafs(x = data, y = labels, gafsControl = ctrl, iters = iterations)
   
@@ -218,9 +241,9 @@ test.gafs.rf = function(testName, data, labels, cvNumber=10, iterations=200) {
 
 }
 
-test.gafs.treebag = function(testName, data, labels, cvNumber=10, iterations=200) {
+test.gafs.treebag = function(testName, data, labels, cvNumber=10, iterations=200, r = 1) {
   data = as.data.frame(data)
-  ctrl = gafsControl(functions = treebagGA, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE, allowParallel = TRUE, genParallel = TRUE)
+  ctrl = gafsControl(functions = treebagGA, method = "repeatedcv", number = cvNumber, repeats = r, verbose = TRUE, allowParallel = TRUE, genParallel = TRUE)
   
   profileRes = gafs(x = data, y = labels, gafsControl = ctrl, iters = iterations )
   
@@ -234,11 +257,11 @@ test.gafs.treebag = function(testName, data, labels, cvNumber=10, iterations=200
   
 }
 
-test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200) {
+test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200, r = 1) {
   labels = as.factor(labels)
   data = as.data.frame(data)
   
-  nb_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber, repeats = 5, verbose = FALSE,)
+  nb_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber, repeats = 1, verbose = TRUE,)
   
   profileRes = gafs(x =  data, y = labels, iters = iterations, gafsControl = nb_ga_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
@@ -251,11 +274,11 @@ test.gafs.nb = function(testName, data, labels, cvNumber=10, iterations=200) {
   write.plot.png(paste(testName, "_ga_nb_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
-test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
+test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200, r = 1) {
   data = as.data.frame(data)
   labels = as.numeric(labels)
   
-  lm_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber, repeats = 5, verbose = FALSE,)
+  lm_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber, repeats = r, verbose = TRUE,)
   
   profileRes = gafs(x =  data, y = labels, iters = iterations, gafsControl = lm_ga_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
@@ -268,11 +291,28 @@ test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
   write.plot.png(paste(testName, "_ga_lm_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
+test.gafs.svm = function(testName, data, labels, cvNumber=10, iterations=200, r = 1) {
+  data = as.data.frame(data)
+  labels = as.numeric(labels)
+  
+  svm_ga_ctrl = gafsControl(functions = caretGA, method = "cv", number = cvNumber, repeats = r, verbose = TRUE)
+  
+  profileRes = gafs(x =  data, y = labels, iters = iterations, gafsControl = svm_ga_ctrl, method = "svmLinear", trControl= trainControl( allowParallel = TRUE))
+  
+  outputText = profileRes
+  
+  sink(paste(testName, "_ga_svm_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  print(outputText)
+  sink()
+  
+  write.plot.png(paste(testName, "_ga_svm_cv_", cvNumber,"_iters_", iterations,"_plot.png", sep = ""), profileRes)
+}
+
 #   SAFS
 
-test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
+test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, improve=5, r = 1) {
   data = as.data.frame(data) 
-  ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE, allowParallel = TRUE)
+  ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = r, improve = improve, verbose = TRUE, allowParallel = TRUE)
   
   profileRes = safs(x = data, y = labels, safsControl = ctrl, iters = iterations )
   
@@ -286,9 +326,9 @@ test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, imp
   
 }
 
-test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
+test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200, improve=5, r = 1) {
   data = as.data.frame(data)
-  ctrl = safsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE, allowParallel = TRUE)
+  ctrl = safsControl(functions = treebagSA, method = "repeatedcv", number = cvNumber, repeats = r, improve = improve, verbose = TRUE, allowParallel = TRUE)
   
   profileRes = safs(x = data, y = labels, safsControl = ctrl, iters = iterations )
   
@@ -302,11 +342,11 @@ test.safs.treebag = function(testName, data, labels, cvNumber=10, iterations=200
   
 }
 
-test.safs.nb = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
+test.safs.nb = function(testName, data, labels, cvNumber=10, iterations=200, improve=5, r = 1) {
   labels = as.factor(labels)
   data = as.data.frame(data)
   
-  nb_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = 5, number = cvNumber, improve = improve)
+  nb_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = r, number = cvNumber, improve = improve, verbose = TRUE)
   
   profileRes = safs(x = data, y = labels, iters = iterations, safsControl = nb_sa_ctrl, method = "nb", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
@@ -319,11 +359,11 @@ test.safs.nb = function(testName, data, labels, cvNumber=10, iterations=200, imp
   write.plot.png(paste(testName, "_sa_nb_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
-test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
+test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, improve=5, r = 1) {
   data = data.frame(data)
   labels = as.numeric(labels)
   
-  lm_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = 5, number = cvNumber, improve = improve)
+  lm_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = r, number = cvNumber, improve = improve, verbose = TRUE)
   
   profileRes = safs(x =  data, y = labels, iters = iterations, safsControl = lm_sa_ctrl, method = "lm", trControl= trainControl(method = "cv", allowParallel = TRUE))
   
@@ -334,6 +374,23 @@ test.safs.lm = function(testName, data, labels, cvNumber=10, iterations=200, imp
   sink()
   
   write.plot.png(paste(testName, "_sa_lm_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_plot.png", sep = ""), profileRes)
+}
+
+test.safs.svm = function(testName, data, labels, cvNumber=5, iterations=200, improve=5, r = 1) {
+  data = data.frame(data)
+  labels = as.numeric(labels)
+  
+  svm_sa_ctrl = safsControl(functions = caretSA, method = "cv", repeats = r, number = cvNumber, improve = improve, verbose = TRUE)
+  
+  profileRes = safs(x =  data, y = labels, iters = iterations, safsControl = svm_sa_ctrl, method = "svmLinear", trControl= trainControl(method = "cv", allowParallel = TRUE))
+  
+  outputText = profileRes
+  
+  sink(paste(testName, "_sa_svm_cv_", cvNumber,"_iters_", iterations,"_output.txt", sep = ""))
+  print(outputText)
+  sink()
+  
+  write.plot.png(paste(testName, "_sa_svm_cv_", cvNumber,"_impr_", improve, "_iters_", iterations,"_plot.png", sep = ""), profileRes)
 }
 
 # Running tests
@@ -349,7 +406,7 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50, 
     
     #test.rfe.rf(testName = name, data = data, labels = labels, cvNumber = cvn)
     
-    #test.rfe.treebag(testName = name, data = data, labels = labels, cvNumber = cvn)
+    test.rfe.svm(testName = name, data = data, labels = labels, cvNumber = cvn)
   }
   
   # gafs
@@ -363,7 +420,7 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50, 
       
       test.gafs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
       
-      #test.gafs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
+      #test.gafs.svm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr)
     }
   }
   
@@ -380,7 +437,7 @@ runTestsSplice = function(name, data, labels, cvNumers=c(5), itersVec=c(25, 50, 
         
         #test.safs.rf(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
-        #test.safs.treebag(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
+        test.safs.svm(testName = name, data = data, labels = labels, cvNumber = cvn, iterations = itr, improve = impr)
         
       }
     }
