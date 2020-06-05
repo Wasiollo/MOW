@@ -114,6 +114,22 @@ constructiveInduction = function(data, triExpand=TRUE) {
   return(ret)
 }
 
+splitToTrainAndTest = function(split) {
+  testSetCount = as.integer(nrow(split$data) * 0.3)
+  testIndexes = sample.int(nrow(split$data), testSetCount)
+  
+  testSet = split$data[testIndexes,]
+  testLabels = cbind(split$labels[testIndexes,])
+  
+  trainSet = split$data[-testIndexes,]
+  trainLabels = cbind(split$labels[-testIndexes,])
+  
+  
+  ret = list("splitIndex" = split$splitIndex, "testSet" = testSet, "testLabels" = testLabels, "trainSet" = trainSet, "trainLabels" = trainLabels)
+  return (ret)
+  
+}
+
 reduceSet = function(reducedSize, splitData) {
   rSetCount = nrow(splitData$data)
   
@@ -135,11 +151,18 @@ write.plot.png = function(filename, plotSource) {
 } 
 
 
-test.rfe.lm = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
-  data = as.data.frame(data)
-  ctrl = rfeControl(functions = lmFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
-  
-  profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
+test.rfe.lm = function(testName, data, labels, testData, testLabels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250)), useCV = FALSE) {
+  if(useCV) {
+    #data = as.data.frame(data)
+    ctrl = rfeControl(functions = lmFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+    
+    profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
+  } else {
+    #data = as.data.frame(data)
+    ctrl = rfeControl(functions = lmFuncs, verbose = TRUE)
+    
+    profileRes = rfe(x = data, y = labels, testX = testData, testY = testLabels, rfeControl = ctrl, sizes = sizes)
+  }
   
   outputText = profileRes
   
@@ -165,13 +188,22 @@ test.rfe.rf = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10,
   write.plot.png(paste(testName, "_rfe_rf_cv_", cvNumber,"_plot.png", sep = ""), profileRes)
 }
 
-test.rfe.nb = function(testName, data, labels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250))) {
-  data = as.data.frame(data)
-  labels = as.factor(labels)
-  
-  ctrl = rfeControl(functions = nbFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = FALSE)
-  
-  profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
+test.rfe.nb = function(testName, data, labels, testData, testLabels, cvNumber=10, sizes=c(1:10,seq(10, ncol(data), by=250)), useCV = FALSE) {
+  if(useCV) {
+    #data = as.data.frame(data)
+    labels = as.factor(labels)
+    
+    ctrl = rfeControl(functions = nbFuncs, method = "repeatedcv", number = cvNumber, repeats = 5, verbose = TRUE)
+    
+    profileRes = rfe(x = data, y = labels, rfeControl = ctrl, sizes = sizes)
+  } else {
+    #data = as.data.frame(data)
+    labels = as.factor(labels)
+    
+    ctrl = rfeControl(functions = nbFuncs, method = "none", repeats = 5, verbose = TRUE)
+    
+    profileRes = rfe(x = data, y = labels, testX = testData, testY = testLabels, rfeControl = ctrl, sizes = sizes)
+  }
   
   outputText = profileRes
   
@@ -270,11 +302,19 @@ test.gafs.lm = function(testName, data, labels, cvNumber=10, iterations=200) {
 
 #   SAFS
 
-test.safs.rf = function(testName, data, labels, cvNumber=10, iterations=200, improve=5) {
-  data = as.data.frame(data) 
-  ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = FALSE, allowParallel = TRUE)
-  
-  profileRes = safs(x = data, y = labels, safsControl = ctrl, iters = iterations )
+test.safs.rf = function(testName, data, labels, testData, testLabels, cvNumber=10, iterations=200, improve=5, useCV=FALSE) {
+  if(useCV) {
+    data = as.data.frame(data) 
+    ctrl = safsControl(functions = rfSA, method = "repeatedcv", number = cvNumber, repeats = 5, improve = improve, verbose = TRUE, allowParallel = TRUE)
+    
+    profileRes = safs(x = data, y = labels, safsControl = ctrl, iters = iterations )
+    
+  } else {
+    data = as.data.frame(data) 
+    ctrl = safsControl(functions = rfSA, improve = improve, verbose = TRUE, allowParallel = TRUE)
+    
+    profileRes = safs(x = data, y = labels, testX = testData, testY = testLabels, safsControl = ctrl, iters = iterations )
+  }
   
   outputText = profileRes
   
@@ -397,6 +437,9 @@ dataSpliceD = readDTrain('data/spliceDTrainKIS.dat')
 
 newFeaturesSpliceD = constructiveInduction(dataSpliceD$data)
 
+dataSpliceD$data = newFeaturesSpliceD
+
+dataSpliceD = splitToTrainAndTest(dataSpliceD, FALSE)
 # Run tests D
 
 runTestsSplice(name = "spliceD_results", data = newFeaturesSpliceD, labels = dataSpliceD$labels)
