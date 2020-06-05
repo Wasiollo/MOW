@@ -1,0 +1,29 @@
+
+Simulated Annealing Feature Selection
+
+5788 samples
+3780 predictors
+
+Maximum search iterations: 25 
+Restart after 10 iterations without improvement (0.4 restarts on average)
+
+Internal performance values: RMSE, Rsquared, MAE
+Subset selection driven to minimize internal RMSE 
+
+External performance values: RMSE, Rsquared, MAE
+Best iteration chose by minimizing external RMSE 
+External resampling method: Cross-Validated (5 fold) 
+
+During resampling:
+  * the top 5 selected variables (out of a possible 3780):
+    TN54 (100%), AA18 (80%), AA51 (80%), AA78 (80%), AG42 (80%)
+  * on average, 844.6 variables were selected (min = 795, max = 877)
+
+In the final search using the entire training set:
+   * 864 features selected at iteration 23 including:
+     A1, GG1, TG1, NG1, SG1 ... 
+   * external performance at this iteration is
+
+       RMSE    Rsquared         MAE 
+     0.3130      0.3800      0.2492 
+
